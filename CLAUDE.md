@@ -64,7 +64,7 @@ If the target language has no `call_expression` node type (like Dart), you will 
 ## Development Workflow
 
 1. **Feature branch** — Create a branch before making any changes
-2. **Meaningful commits** — Commit during work with clear descriptions of what changed and why
+2. **Meaningful commits** — Commit during work with clear descriptions of what changed and why. Always commit as `Luzgan` (`git config user.name "Luzgan"`)
 3. **Run tests** — Always run `npm test` after changes. Fix regressions in code, not tests. Only modify tests if changes intentionally affect the tested behavior
 4. **Type checking** — Always run `npm run build` (which runs `tsc`). No type errors allowed
 5. **Merge** — After feature is complete and green, merge the branch into main and rebuild (`npm run build`), so the MCP server picks up the new code
