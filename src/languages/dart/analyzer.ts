@@ -72,6 +72,12 @@ export class DartAnalyzer extends BaseAnalyzer {
     return KNOWN_METHODS;
   }
 
+  protected getCallNodeTypes(): string[] {
+    // Dart has no call_expression node — all call detection is handled
+    // by overridden methods using findCallSites().
+    return [];
+  }
+
   // ── Function extraction ─────────────────────────────────────────
 
   /**

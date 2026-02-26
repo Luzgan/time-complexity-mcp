@@ -52,6 +52,10 @@ export class JavaScriptAnalyzer extends BaseAnalyzer {
     return KNOWN_METHODS;
   }
 
+  protected getCallNodeTypes(): string[] {
+    return ["call_expression"];
+  }
+
   protected extractFunctionName(node: Parser.SyntaxNode): string {
     // function_declaration / generator_function_declaration -> name child
     if (

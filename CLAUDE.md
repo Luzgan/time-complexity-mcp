@@ -24,6 +24,9 @@ src/
     index.ts                # Language registry — maps extensions to analyzers
     javascript/             # JS/TS analyzer (tree-sitter-javascript/typescript)
     dart/                   # Dart analyzer (vendor/tree-sitter-dart)
+    kotlin/                 # Kotlin analyzer (tree-sitter-kotlin)
+    java/                   # Java analyzer (tree-sitter-java)
+    python/                 # Python analyzer (tree-sitter-python)
   tools/                    # MCP tool implementations (analyze-file, analyze-function, etc.)
   utils/                    # File I/O & output formatting helpers
 vendor/
@@ -31,7 +34,10 @@ vendor/
 tests/
   analyzer.test.ts          # JS/TS test suite
   dart-analyzer.test.ts     # Dart test suite
-  fixtures/                 # .ts and .dart sample files for tests
+  kotlin-analyzer.test.ts   # Kotlin test suite
+  java-analyzer.test.ts     # Java test suite
+  python-analyzer.test.ts   # Python test suite
+  fixtures/                 # Sample files for tests (.ts, .dart, .kt, .java, .py)
 ```
 
 ## Adding a New Language
@@ -40,9 +46,10 @@ Each language lives in `src/languages/<name>/` with three files:
 
 1. **`node-types.ts`** — AST node type constants for functions and loops
 2. **`patterns.ts`** — Known stdlib method complexities (e.g., `.sort` is O(n log n))
-3. **`analyzer.ts`** — Class extending `BaseAnalyzer`, implementing 8 template methods:
+3. **`analyzer.ts`** — Class extending `BaseAnalyzer`, implementing 9 template methods:
    - `getGrammar()` — return tree-sitter grammar
    - `getFunctionNodeTypes()` / `getLoopNodeTypes()` — AST node types
+   - `getCallNodeTypes()` — AST node types for function/method calls (e.g., `["call_expression"]` for JS/Kotlin, `["method_invocation"]` for Java, `["call"]` for Python)
    - `getKnownMethods()` — known method patterns
    - `extractFunctionName(node)` / `extractParameters(node)` — name & params from AST
    - `isConstantLoop(node)` — detect constant-bound loops (e.g., `for i < 10`)
@@ -61,6 +68,7 @@ If the target language has no `call_expression` node type (like Dart), you will 
 3. **Run tests** — Always run `npm test` after changes. Fix regressions in code, not tests. Only modify tests if changes intentionally affect the tested behavior
 4. **Type checking** — Always run `npm run build` (which runs `tsc`). No type errors allowed
 5. **Merge** — After feature is complete and green, merge the branch into main and rebuild (`npm run build`), so the MCP server picks up the new code
+6. **Update life_manager** - run life_manager mcp in order to update the project there
 
 ### Commands
 
@@ -93,3 +101,8 @@ The server is configured in `.mcp.json` at the project root and exposes 4 tools:
 For VS Code (Copilot), configure in `.vscode/mcp.json` using `${workspaceFolder}/dist/index.js`.
 
 After code changes, rebuild with `npm run build` and restart the MCP server for changes to take effect.
+
+## GitHub
+
+- **Account:** [Luzgan](https://github.com/Luzgan)
+- **Repository:** [Luzgan/time-complexity-mcp](https://github.com/Luzgan/time-complexity-mcp)

@@ -2,6 +2,9 @@ import path from "node:path";
 import type { LanguageAnalyzer, LanguageInfo } from "../analyzer/types.js";
 import { JavaScriptAnalyzer } from "./javascript/analyzer.js";
 import { DartAnalyzer } from "./dart/analyzer.js";
+import { KotlinAnalyzer } from "./kotlin/analyzer.js";
+import { JavaAnalyzer } from "./java/analyzer.js";
+import { PythonAnalyzer } from "./python/analyzer.js";
 
 type AnalyzerFactory = () => LanguageAnalyzer;
 
@@ -17,6 +20,16 @@ registry.set(".tsx", () => new JavaScriptAnalyzer("tsx"));
 
 // Dart
 registry.set(".dart", () => new DartAnalyzer());
+
+// Kotlin
+registry.set(".kt", () => new KotlinAnalyzer());
+registry.set(".kts", () => new KotlinAnalyzer());
+
+// Java
+registry.set(".java", () => new JavaAnalyzer());
+
+// Python
+registry.set(".py", () => new PythonAnalyzer());
 
 export function getAnalyzerForFile(
   filePath: string,
@@ -40,6 +53,21 @@ export function getSupportedLanguages(): LanguageInfo[] {
     {
       name: "Dart",
       extensions: [".dart"],
+      features: ["loops", "recursion", "built-in-methods"],
+    },
+    {
+      name: "Kotlin",
+      extensions: [".kt", ".kts"],
+      features: ["loops", "recursion", "built-in-methods"],
+    },
+    {
+      name: "Java",
+      extensions: [".java"],
+      features: ["loops", "recursion", "built-in-methods"],
+    },
+    {
+      name: "Python",
+      extensions: [".py"],
       features: ["loops", "recursion", "built-in-methods"],
     },
   ];

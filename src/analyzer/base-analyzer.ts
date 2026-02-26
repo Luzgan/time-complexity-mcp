@@ -42,6 +42,7 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
   protected abstract extractParameters(node: Parser.SyntaxNode): string[];
   protected abstract isConstantLoop(node: Parser.SyntaxNode): boolean;
   protected abstract getCallName(node: Parser.SyntaxNode): string | null;
+  protected abstract getCallNodeTypes(): string[];
 
   constructor() {
     this.parser = new Parser();
@@ -111,7 +112,10 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
       // Check if this call is inside a loop
       const insideLoop = this.isInsideLoop(call, func.node);
       if (insideLoop) {
-        overallComplexity = multiplyComplexity(loopComplexity, call.complexity);
+        overallComplexity = maxComplexity(
+          overallComplexity,
+          multiplyComplexity(loopComplexity, call.complexity),
+        );
       } else {
         overallComplexity = maxComplexity(overallComplexity, call.complexity);
       }
@@ -204,7 +208,7 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
   ): boolean {
     let found = false;
     this.walkNode(funcNode, (node) => {
-      if (node.type === "call_expression") {
+      if (this.getCallNodeTypes().includes(node.type)) {
         const callName = this.getCallName(node);
         if (callName === funcName) {
           found = true;
@@ -221,7 +225,7 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
     // Count recursive calls
     let callCount = 0;
     this.walkNode(funcNode, (node) => {
-      if (node.type === "call_expression") {
+      if (this.getCallNodeTypes().includes(node.type)) {
         const callName = this.getCallName(node);
         if (callName === funcName) callCount++;
       }
@@ -237,7 +241,7 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
     const calls: KnownCallInfo[] = [];
 
     this.walkNode(funcNode, (node) => {
-      if (node.type === "call_expression") {
+      if (this.getCallNodeTypes().includes(node.type)) {
         const callName = this.getCallName(node);
         if (callName) {
           for (const method of knownMethods) {
@@ -269,7 +273,7 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
       const currentInLoop = inLoop || isLoop;
 
       if (
-        node.type === "call_expression" &&
+        this.getCallNodeTypes().includes(node.type) &&
         node.startPosition.row + 1 === call.line &&
         currentInLoop
       ) {

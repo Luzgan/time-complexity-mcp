@@ -7,3 +7,6 @@ dist/
 vendor/*/build/
 vendor/*/node_modules/
 vendor/*/package-lock.json
+
+# Release bundles (created by scripts/package-release.mjs)
+release/
