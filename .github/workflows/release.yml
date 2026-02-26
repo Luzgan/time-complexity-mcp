@@ -60,14 +60,54 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
 
+      - name: Build release body
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -n 1 || true)
+
+          if [ -z "$PREV_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s (%h)" "$TAG")
+          else
+            COMMITS=$(git log --pretty=format:"- %s (%h)" "${PREV_TAG}..${TAG}")
+          fi
+
+          {
+            echo '## Setup (Claude Code)'
+            echo ''
+            echo '1. Download and extract the archive for your platform'
+            echo '2. Add to your Claude Code MCP config (`~/.claude.json` or project `.mcp.json`):'
+            echo ''
+            echo '```json'
+            echo '{'
+            echo '  "mcpServers": {'
+            echo '    "time-complexity": {'
+            echo '      "command": "node",'
+            echo '      "args": ["/path/to/time-complexity-mcp/dist/index.js"]'
+            echo '    }'
+            echo '  }'
+            echo '}'
+            echo '```'
+            echo ''
+            echo '3. Restart Claude Code — the `analyze_file`, `analyze_function`, `analyze_directory`, and `get_supported_languages` tools will be available'
+            echo ''
+            echo '## Changes'
+            echo ''
+            echo "$COMMITS"
+          } > /tmp/release-body.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*
-          generate_release_notes: true
+          body_path: /tmp/release-body.md
