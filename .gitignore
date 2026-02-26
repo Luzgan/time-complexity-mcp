@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+
+# Vendor native build artifacts (rebuilt on npm install)
+vendor/*/build/
+vendor/*/node_modules/
+vendor/*/package-lock.json

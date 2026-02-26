@@ -1,0 +1,35 @@
+{
+  "name": "time-complexity-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that analyzes code for Big-O time complexity",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "postinstall": "cd vendor/tree-sitter-dart && npm install",
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "mcp",
+    "time-complexity",
+    "big-o",
+    "static-analysis"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.0",
+    "glob": "^13.0.6",
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-javascript": "^0.21.4",
+    "tree-sitter-typescript": "^0.23.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
