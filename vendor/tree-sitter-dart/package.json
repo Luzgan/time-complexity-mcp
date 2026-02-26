@@ -1,0 +1,13 @@
+{
+  "name": "tree-sitter-dart",
+  "version": "1.0.0",
+  "description": "Dart grammar for tree-sitter (NAPI binding)",
+  "main": "bindings/node/index.js",
+  "dependencies": {
+    "node-addon-api": "^7.1.0",
+    "node-gyp-build": "^4.8.0"
+  },
+  "scripts": {
+    "install": "node-gyp-build"
+  }
+}
