@@ -37,26 +37,25 @@ The server exposes 4 MCP tools:
 
 ### Install from Release (recommended)
 
-Download the prebuilt bundle for your platform from the [Releases](../../releases/latest) page:
+Download the prebuilt bundle for your platform from the [latest release](https://github.com/Luzgan/time-complexity-mcp/releases/latest):
 
 | Platform | File |
 |---|---|
 | macOS (Apple Silicon) | `time-complexity-mcp-darwin-arm64-v*.tar.gz` |
-| macOS (Intel) | `time-complexity-mcp-darwin-x64-v*.tar.gz` |
 | Linux x64 | `time-complexity-mcp-linux-x64-v*.tar.gz` |
 | Linux arm64 | `time-complexity-mcp-linux-arm64-v*.tar.gz` |
 | Windows x64 | `time-complexity-mcp-win32-x64-v*.zip` |
 
-Extract and point your MCP config at the `dist/index.js` inside:
+Extract and configure:
 
 ```bash
 # macOS / Linux
-tar xzf time-complexity-mcp-*.tar.gz
+tar xzf time-complexity-mcp-darwin-arm64-v*.tar.gz
 ```
 
 ```powershell
 # Windows
-Expand-Archive time-complexity-mcp-*.zip
+Expand-Archive time-complexity-mcp-win32-x64-v*.zip
 ```
 
 No C++ compiler or `npm install` required &mdash; just Node.js 18+.
@@ -66,7 +65,8 @@ No C++ compiler or `npm install` required &mdash; just Node.js 18+.
 Requires Node.js 18+ and a C++ compiler (Xcode CLI tools on macOS, `build-essential` on Linux).
 
 ```bash
-git clone <repo-url> && cd time-complexity-mcp
+git clone https://github.com/Luzgan/time-complexity-mcp.git
+cd time-complexity-mcp
 npm install
 npm run build
 ```
@@ -75,7 +75,7 @@ The `postinstall` script automatically builds the vendor Dart grammar.
 
 ### Configure with Claude Code
 
-Add to your project's `.mcp.json`:
+Add to your project's `.mcp.json` (or `~/.claude.json` for global access):
 
 ```json
 {
@@ -88,6 +88,8 @@ Add to your project's `.mcp.json`:
   }
 }
 ```
+
+Then restart Claude Code. The tools `analyze_file`, `analyze_function`, `analyze_directory`, and `get_supported_languages` will be available automatically.
 
 ### Configure with GitHub Copilot (VS Code)
 
