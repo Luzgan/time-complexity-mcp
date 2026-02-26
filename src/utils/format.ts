@@ -38,26 +38,26 @@ export function formatFunctionResult(fn: FunctionComplexity): string {
   return lines.join("\n");
 }
 
+export const COMPLEXITY_RANK = new Map<BigOComplexity, number>([
+  ["O(1)", 0],
+  ["O(log n)", 1],
+  ["O(n)", 2],
+  ["O(n log n)", 3],
+  ["O(n^2)", 4],
+  ["O(n^3)", 5],
+  ["O(2^n)", 6],
+  ["O(n!)", 7],
+  ["unknown", 8],
+]);
+
 export function highestComplexity(
   functions: FunctionComplexity[],
 ): BigOComplexity {
   if (functions.length === 0) return "O(1)";
 
-  const order: BigOComplexity[] = [
-    "O(1)",
-    "O(log n)",
-    "O(n)",
-    "O(n log n)",
-    "O(n^2)",
-    "O(n^3)",
-    "O(2^n)",
-    "O(n!)",
-    "unknown",
-  ];
-
   let highest: BigOComplexity = "O(1)";
   for (const fn of functions) {
-    if (order.indexOf(fn.complexity) > order.indexOf(highest)) {
+    if ((COMPLEXITY_RANK.get(fn.complexity) ?? 0) > (COMPLEXITY_RANK.get(highest) ?? 0)) {
       highest = fn.complexity;
     }
   }

@@ -50,24 +50,20 @@ export class KotlinAnalyzer extends BaseAnalyzer {
   protected extractParameters(node: Parser.SyntaxNode): string[] {
     const params: string[] = [];
 
-    // Find function_value_parameters child
-    for (let i = 0; i < node.childCount; i++) {
-      const child = node.child(i);
-      if (child?.type === "function_value_parameters") {
-        // Each parameter child has: simple_identifier (name), ":", type
-        for (let j = 0; j < child.childCount; j++) {
-          const param = child.child(j);
-          if (param?.type === "parameter") {
-            // First simple_identifier is the parameter name
-            for (let k = 0; k < param.childCount; k++) {
-              const sub = param.child(k);
-              if (sub?.type === "simple_identifier") {
-                params.push(sub.text);
-                break;
-              }
-            }
-          }
-        }
+    // Find function_value_parameters child, then extract parameter names
+    const paramList = node.children.find(
+      (c) => c.type === "function_value_parameters",
+    );
+    if (!paramList) return params;
+
+    for (let j = 0; j < paramList.childCount; j++) {
+      const param = paramList.child(j);
+      if (param?.type === "parameter") {
+        // Use field-based access or find first simple_identifier
+        const name = param.children.find(
+          (c) => c.type === "simple_identifier",
+        );
+        if (name) params.push(name.text);
       }
     }
 
@@ -75,32 +71,22 @@ export class KotlinAnalyzer extends BaseAnalyzer {
   }
 
   protected isConstantLoop(node: Parser.SyntaxNode): boolean {
-    if (node.type === "for_statement") {
-      // Look for range expressions with numeric literals: 0 until 10, 0..9
-      // The iterable is typically the 5th child (after "for", "(", var, "in")
-      for (let i = 0; i < node.childCount; i++) {
-        const child = node.child(i);
-        if (child?.type === "range_expression") {
-          // Check if both bounds are integer literals
-          let hasLiteralBounds = true;
-          for (let j = 0; j < child.childCount; j++) {
-            const sub = child.child(j);
-            if (sub?.type === "integer_literal") continue;
-            if (sub?.type === "simple_identifier") {
-              hasLiteralBounds = false;
-            }
-          }
-          // If we found a range with literal bounds, it's constant
-          if (hasLiteralBounds) {
-            // Check that there's at least one integer_literal
-            for (let j = 0; j < child.childCount; j++) {
-              if (child.child(j)?.type === "integer_literal") return true;
-            }
-          }
-        }
-      }
+    if (node.type !== "for_statement") return false;
+
+    // Find range_expression child (e.g., 0 until 10, 0..9)
+    const range = node.children.find((c) => c.type === "range_expression");
+    if (!range) return false;
+
+    // Single pass: check that range has at least one integer literal
+    // and no variable identifiers (which would make it non-constant)
+    let hasLiteral = false;
+    let hasVariable = false;
+    for (let j = 0; j < range.childCount; j++) {
+      const sub = range.child(j);
+      if (sub?.type === "integer_literal") hasLiteral = true;
+      if (sub?.type === "simple_identifier") hasVariable = true;
     }
-    return false;
+    return hasLiteral && !hasVariable;
   }
 
   protected getCallName(node: Parser.SyntaxNode): string | null {

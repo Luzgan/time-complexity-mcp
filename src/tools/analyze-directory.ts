@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { findSourceFiles } from "../utils/file-utils.js";
 import { analyzeFile } from "./analyze-file.js";
-import { highestComplexity, groupByComplexity } from "../utils/format.js";
+import { highestComplexity, groupByComplexity, COMPLEXITY_RANK } from "../utils/format.js";
 import type { BigOComplexity, DirectoryAnalysisResult } from "../analyzer/types.js";
 
 export const analyzeDirectorySchema = z.object({
@@ -86,15 +86,11 @@ export async function analyzeDirectory(
   }
 
   // Sort by complexity to find hotspots
-  const complexityOrder: BigOComplexity[] = [
-    "O(1)", "O(log n)", "O(n)", "O(n log n)",
-    "O(n^2)", "O(n^3)", "O(2^n)", "O(n!)", "unknown",
-  ];
   const hotspots = [...allFunctions]
     .sort(
       (a, b) =>
-        complexityOrder.indexOf(b.complexity) -
-        complexityOrder.indexOf(a.complexity),
+        (COMPLEXITY_RANK.get(b.complexity) ?? 0) -
+        (COMPLEXITY_RANK.get(a.complexity) ?? 0),
     )
     .slice(0, 5)
     .map((fn) => ({
