@@ -29,7 +29,7 @@ src/
     python/                 # Python analyzer (tree-sitter-python)
     php/                    # PHP analyzer (tree-sitter-php)
     go/                     # Go analyzer (tree-sitter-go)
-  tools/                    # MCP tool implementations (analyze-file, analyze-function, etc.)
+  tools/                    # MCP tool implementations (analyze-file, analyze-function, analyze-github-repo, etc.)
   utils/                    # File I/O & output formatting helpers
 vendor/
   tree-sitter-dart/         # Custom NAPI binding for Dart grammar (see below)
@@ -41,6 +41,7 @@ tests/
   python-analyzer.test.ts   # Python test suite
   php-analyzer.test.ts      # PHP test suite
   go-analyzer.test.ts       # Go test suite
+  github-repo-analyzer.test.ts  # GitHub repo tool test suite
   fixtures/                 # Sample files for tests (.ts, .dart, .kt, .java, .py, .php, .go)
 ```
 
@@ -89,17 +90,18 @@ npm run dev         # Run server directly via tsx (no build needed)
 - **File access is read-only.** The analyzer reads source files to parse them. It does not write, modify, or delete any files.
 - **Path validation.** File paths received from MCP tool calls must be validated. Never allow path traversal beyond what the user intends.
 - **Native addons.** The tree-sitter grammars are compiled native NAPI addons. Only use grammars from trusted sources. The vendor bindings (`vendor/tree-sitter-dart/`) compile C source from the upstream grammar — review any changes to `binding.cc` or `parser.c` carefully.
-- **No network access.** The server operates entirely locally over stdio. It makes no outbound network requests.
+- **Network access (opt-in).** The `analyze_github_repo` tool invokes `git clone` as a subprocess to fetch public GitHub repositories. All other tools operate entirely locally over stdio. Clone URLs are restricted to HTTPS GitHub URLs. Cloned content is parsed as ASTs only — never evaluated or executed. Temporary clones are cleaned up after analysis.
 
 ## MCP Integration
 
-The server is configured in `.mcp.json` at the project root and exposes 4 tools:
+The server is configured in `.mcp.json` at the project root and exposes 5 tools:
 
 | Tool | Description |
 |------|-------------|
 | `analyze_file` | Analyze all functions in a single source file |
 | `analyze_function` | Analyze a specific function by name or line number |
 | `analyze_directory` | Scan a directory and report complexity across the codebase |
+| `analyze_github_repo` | Clone a GitHub repo and analyze complexity (requires `git` in PATH) |
 | `get_supported_languages` | List supported languages and their file extensions |
 
 For VS Code (Copilot), configure in `.vscode/mcp.json` using `${workspaceFolder}/dist/index.js`.

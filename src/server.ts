@@ -4,6 +4,7 @@ import { analyzeFileSchema, analyzeFile } from "./tools/analyze-file.js";
 import { analyzeFunction } from "./tools/analyze-function.js";
 import { analyzeDirectorySchema, analyzeDirectory } from "./tools/analyze-directory.js";
 import { getSupportedLanguagesSchema, getSupportedLanguages } from "./tools/get-supported-languages.js";
+import { analyzeGithubRepoSchema, analyzeGithubRepo } from "./tools/analyze-github-repo.js";
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -63,6 +64,20 @@ export function createServer(): McpServer {
     getSupportedLanguagesSchema.shape,
     async () => {
       const result = getSupportedLanguages();
+      return {
+        content: [
+          { type: "text" as const, text: JSON.stringify(result, null, 2) },
+        ],
+      };
+    },
+  );
+
+  server.tool(
+    "analyze_github_repo",
+    "Clone a GitHub repository and analyze complexity across the codebase. Accepts full URL (https://github.com/owner/repo) or shorthand (owner/repo). Requires git in PATH. Returns per-file complexity with hotspots, plus repository metadata.",
+    analyzeGithubRepoSchema.shape,
+    async (input) => {
+      const result = await analyzeGithubRepo(input);
       return {
         content: [
           { type: "text" as const, text: JSON.stringify(result, null, 2) },

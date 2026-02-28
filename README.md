@@ -26,13 +26,14 @@ Built for AI coding assistants &mdash; works with [Claude Code](https://claude.a
 
 ## Tools
 
-The server exposes 4 MCP tools:
+The server exposes 5 MCP tools:
 
 | Tool | Description |
 |---|---|
 | `analyze_file` | Analyze all functions in a source file. Returns per-function Big-O with reasoning and line annotations. |
 | `analyze_function` | Analyze a single function by name or line number. |
 | `analyze_directory` | Scan a directory for all supported files. Returns a summary with hotspots (top 5 most complex functions). |
+| `analyze_github_repo` | Clone a GitHub repo and analyze complexity. Accepts `owner/repo` or full URL. Requires `git` in PATH. |
 | `get_supported_languages` | List supported languages with file extensions. |
 
 ## Setup
@@ -60,7 +61,7 @@ tar xzf time-complexity-mcp-darwin-arm64-v*.tar.gz
 Expand-Archive time-complexity-mcp-win32-x64-v*.zip
 ```
 
-No C++ compiler or `npm install` required &mdash; just Node.js 18+.
+No C++ compiler or `npm install` required &mdash; just Node.js 18+. The `analyze_github_repo` tool also requires `git` in PATH.
 
 ### Install from Source
 
@@ -91,7 +92,7 @@ Add to your project's `.mcp.json` (or `~/.claude.json` for global access):
 }
 ```
 
-Then restart Claude Code. The tools `analyze_file`, `analyze_function`, `analyze_directory`, and `get_supported_languages` will be available automatically.
+Then restart Claude Code. The tools `analyze_file`, `analyze_function`, `analyze_directory`, `analyze_github_repo`, and `get_supported_languages` will be available automatically.
 
 ### Configure with GitHub Copilot (VS Code)
 
@@ -137,6 +138,20 @@ bubbleSort (lines 1-10): O(n^2)
 ```
 > What's the complexity of the fibonacci function in recursion.py?
 ```
+
+### Analyze a GitHub repository
+
+```
+> Analyze the complexity of facebook/react
+```
+
+or with a full URL:
+
+```
+> Analyze https://github.com/expressjs/express, focus on the lib/ directory
+```
+
+Clones the repo temporarily, analyzes it, and returns results with repo-relative file paths. Requires `git` installed.
 
 ### Scan an entire codebase
 
@@ -188,7 +203,7 @@ src/
 vendor/
   tree-sitter-dart/         # Custom NAPI binding for Dart grammar
 tests/
-  *.test.ts                 # Per-language test suites (84 tests total)
+  *.test.ts                 # Per-language test suites (99 tests total)
   fixtures/                 # Sample source files
 ```
 
@@ -210,7 +225,7 @@ getCallName()             → function/method name from call node
 
 ```bash
 npm run build       # Compile TypeScript (also type-checks)
-npm test            # Run all 84 tests
+npm test            # Run all 99 tests
 npm run test:watch  # Watch mode
 npm run dev         # Run server via tsx (no build needed)
 ```
@@ -219,7 +234,7 @@ npm run dev         # Run server via tsx (no build needed)
 
 - **Static analysis only.** Code is parsed into ASTs and inspected &mdash; never evaluated, executed, or imported.
 - **Read-only file access.** Source files are read for parsing. Nothing is written, modified, or deleted.
-- **No network access.** The server runs locally over stdio with no outbound requests.
+- **Network access (opt-in).** The `analyze_github_repo` tool invokes `git clone` to fetch public GitHub repos. All other tools run locally with no network access. Clone URLs are restricted to HTTPS GitHub URLs only.
 - **Trusted native addons.** Tree-sitter grammars are compiled NAPI addons from verified sources.
 
 ## License

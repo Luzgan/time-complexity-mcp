@@ -94,6 +94,16 @@ export interface DirectoryAnalysisResult {
   };
 }
 
+export interface GithubRepoAnalysisResult extends DirectoryAnalysisResult {
+  repository: {
+    owner: string;
+    name: string;
+    ref: string | null;
+    url: string;
+    clonedAt: string;
+  };
+}
+
 export interface LanguageAnalyzer {
   readonly language: string;
   readonly extensions: string[];
