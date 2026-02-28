@@ -71,6 +71,14 @@ describe("Python analyzer", () => {
       expect(fn!.complexity).toBe("O(2^n)");
       expect(fn!.isRecursive).toBe(true);
     });
+
+    it("should detect O(n) for tree traversal (recursive call inside loop)", async () => {
+      const result = await analyzeFile({ file_path: fixture("python-recursion.py") });
+      const fn = result.functions.find((f) => f.name === "traverse_tree");
+      expect(fn).toBeDefined();
+      expect(fn!.complexity).toBe("O(n)");
+      expect(fn!.isRecursive).toBe(true);
+    });
   });
 
   describe("python-built-in-methods.py", () => {

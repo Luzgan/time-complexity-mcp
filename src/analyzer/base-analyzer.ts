@@ -222,17 +222,37 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
     funcNode: Parser.SyntaxNode,
     funcName: string,
   ): BigOComplexity {
-    // Count recursive calls
-    let callCount = 0;
-    this.walkNode(funcNode, (node) => {
+    // Count recursive calls, distinguishing those inside loops (tree traversal)
+    // from those outside loops (branching recursion like fibonacci)
+    let totalCalls = 0;
+    let callsOutsideLoops = 0;
+    const loopTypes = this.getLoopNodeTypes().types;
+
+    const walk = (node: Parser.SyntaxNode, inLoop: boolean): void => {
+      const isLoop = loopTypes.includes(node.type);
+      const currentInLoop = inLoop || isLoop;
+
       if (this.getCallNodeTypes().includes(node.type)) {
         const callName = this.getCallName(node);
-        if (callName === funcName) callCount++;
+        if (callName === funcName) {
+          totalCalls++;
+          if (!currentInLoop) callsOutsideLoops++;
+        }
       }
-    });
 
-    if (callCount === 1) return "O(n)"; // linear recursion
-    if (callCount === 2) return "O(2^n)"; // branching recursion (like fibonacci)
+      for (let i = 0; i < node.childCount; i++) {
+        const child = node.child(i);
+        if (child) walk(child, currentInLoop);
+      }
+    };
+
+    walk(funcNode, false);
+
+    if (totalCalls === 0) return "O(1)";
+    // At least one call inside a loop → tree traversal pattern → O(n)
+    if (callsOutsideLoops < totalCalls) return "O(n)";
+    if (totalCalls === 1) return "O(n)"; // linear recursion
+    if (totalCalls >= 2) return "O(2^n)"; // branching recursion (like fibonacci)
     return "unknown";
   }
 

@@ -473,8 +473,29 @@ export class DartAnalyzer extends BaseAnalyzer {
     const calls = this.findCallSites(funcNode);
     const recursiveCalls = calls.filter((c) => c.callName === funcName);
 
-    if (recursiveCalls.length === 1) return "O(n)";
-    if (recursiveCalls.length === 2) return "O(2^n)";
+    if (recursiveCalls.length === 0) return "O(1)";
+
+    // Check whether each recursive call is inside a loop (tree traversal)
+    const loopTypes = this.getLoopNodeTypes().types;
+    let callsOutsideLoops = 0;
+
+    for (const call of recursiveCalls) {
+      let node = call.node.parent;
+      let insideLoop = false;
+      while (node && node.id !== funcNode.id) {
+        if (loopTypes.includes(node.type)) {
+          insideLoop = true;
+          break;
+        }
+        node = node.parent;
+      }
+      if (!insideLoop) callsOutsideLoops++;
+    }
+
+    // At least one call inside a loop → tree traversal pattern → O(n)
+    if (callsOutsideLoops < recursiveCalls.length) return "O(n)";
+    if (recursiveCalls.length === 1) return "O(n)"; // linear recursion
+    if (recursiveCalls.length >= 2) return "O(2^n)"; // branching recursion
     return "unknown";
   }
 

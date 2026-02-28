@@ -7,3 +7,13 @@ int fibonacci(int n) {
   if (n <= 1) return n;
   return fibonacci(n - 1) + fibonacci(n - 2);
 }
+
+// O(n) - tree traversal recursion (recursive call inside loop)
+int traverseTree(List<dynamic> node) {
+  int sum = node[0] as int;
+  List<dynamic> children = node[1] as List<dynamic>;
+  for (var child in children) {
+    sum += traverseTree(child as List<dynamic>);
+  }
+  return sum;
+}

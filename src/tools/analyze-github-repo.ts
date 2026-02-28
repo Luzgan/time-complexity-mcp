@@ -173,9 +173,13 @@ export async function cloneAndAnalyze(
     });
 
     // Relativize file paths (strip temp dir prefix → repo-relative)
+    // Normalize to forward slashes for consistent paths across platforms
     const repoPrefix = tmpDir + path.sep;
     const relativize = (p: string) =>
-      p.startsWith(repoPrefix) ? p.slice(repoPrefix.length) : p;
+      (p.startsWith(repoPrefix) ? p.slice(repoPrefix.length) : p).replaceAll(
+        "\\",
+        "/",
+      );
 
     const result: GithubRepoAnalysisResult = {
       ...directoryResult,

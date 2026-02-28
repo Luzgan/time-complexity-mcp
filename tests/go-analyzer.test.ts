@@ -71,6 +71,14 @@ describe("Go analyzer", () => {
       expect(fn!.complexity).toBe("O(2^n)");
       expect(fn!.isRecursive).toBe(true);
     });
+
+    it("should detect O(n) for tree traversal (recursive call inside loop)", async () => {
+      const result = await analyzeFile({ file_path: fixture("go-recursion.go") });
+      const fn = result.functions.find((f) => f.name === "traverseTree");
+      expect(fn).toBeDefined();
+      expect(fn!.complexity).toBe("O(n)");
+      expect(fn!.isRecursive).toBe(true);
+    });
   });
 
   describe("go-built-in-methods.go", () => {
