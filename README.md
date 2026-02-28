@@ -14,6 +14,8 @@ Built for AI coding assistants &mdash; works with [Claude Code](https://claude.a
 | Kotlin | `.kt`, `.kts` | tree-sitter-kotlin |
 | Java | `.java` | tree-sitter-java |
 | Python | `.py` | tree-sitter-python |
+| PHP | `.php` | tree-sitter-php |
+| Go | `.go` | tree-sitter-go |
 
 ## What It Detects
 
@@ -179,12 +181,14 @@ src/
     kotlin/                 # Kotlin analyzer
     java/                   # Java analyzer
     python/                 # Python analyzer
+    php/                    # PHP analyzer
+    go/                     # Go analyzer
   tools/                    # MCP tool implementations
   utils/                    # File I/O & formatting
 vendor/
   tree-sitter-dart/         # Custom NAPI binding for Dart grammar
 tests/
-  *.test.ts                 # Per-language test suites (60 tests total)
+  *.test.ts                 # Per-language test suites (84 tests total)
   fixtures/                 # Sample source files
 ```
 
@@ -206,7 +210,7 @@ getCallName()             → function/method name from call node
 
 ```bash
 npm run build       # Compile TypeScript (also type-checks)
-npm test            # Run all 60 tests
+npm test            # Run all 84 tests
 npm run test:watch  # Watch mode
 npm run dev         # Run server via tsx (no build needed)
 ```

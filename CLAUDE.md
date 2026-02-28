@@ -27,6 +27,8 @@ src/
     kotlin/                 # Kotlin analyzer (tree-sitter-kotlin)
     java/                   # Java analyzer (tree-sitter-java)
     python/                 # Python analyzer (tree-sitter-python)
+    php/                    # PHP analyzer (tree-sitter-php)
+    go/                     # Go analyzer (tree-sitter-go)
   tools/                    # MCP tool implementations (analyze-file, analyze-function, etc.)
   utils/                    # File I/O & output formatting helpers
 vendor/
@@ -37,7 +39,9 @@ tests/
   kotlin-analyzer.test.ts   # Kotlin test suite
   java-analyzer.test.ts     # Java test suite
   python-analyzer.test.ts   # Python test suite
-  fixtures/                 # Sample files for tests (.ts, .dart, .kt, .java, .py)
+  php-analyzer.test.ts      # PHP test suite
+  go-analyzer.test.ts       # Go test suite
+  fixtures/                 # Sample files for tests (.ts, .dart, .kt, .java, .py, .php, .go)
 ```
 
 ## Adding a New Language

@@ -5,6 +5,8 @@ import { DartAnalyzer } from "./dart/analyzer.js";
 import { KotlinAnalyzer } from "./kotlin/analyzer.js";
 import { JavaAnalyzer } from "./java/analyzer.js";
 import { PythonAnalyzer } from "./python/analyzer.js";
+import { PhpAnalyzer } from "./php/analyzer.js";
+import { GoAnalyzer } from "./go/analyzer.js";
 
 type AnalyzerFactory = () => LanguageAnalyzer;
 
@@ -30,6 +32,12 @@ registry.set(".java", () => new JavaAnalyzer());
 
 // Python
 registry.set(".py", () => new PythonAnalyzer());
+
+// PHP
+registry.set(".php", () => new PhpAnalyzer());
+
+// Go
+registry.set(".go", () => new GoAnalyzer());
 
 export function getAnalyzerForFile(
   filePath: string,
@@ -68,6 +76,16 @@ export function getSupportedLanguages(): LanguageInfo[] {
     {
       name: "Python",
       extensions: [".py"],
+      features: ["loops", "recursion", "built-in-methods"],
+    },
+    {
+      name: "PHP",
+      extensions: [".php"],
+      features: ["loops", "recursion", "built-in-methods"],
+    },
+    {
+      name: "Go",
+      extensions: [".go"],
       features: ["loops", "recursion", "built-in-methods"],
     },
   ];
