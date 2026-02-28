@@ -41,6 +41,7 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
   protected abstract extractFunctionName(node: Parser.SyntaxNode): string;
   protected abstract extractParameters(node: Parser.SyntaxNode): string[];
   protected abstract isConstantLoop(node: Parser.SyntaxNode): boolean;
+  protected abstract isLogarithmicLoop(node: Parser.SyntaxNode): boolean;
   protected abstract getCallName(node: Parser.SyntaxNode): string | null;
   protected abstract getCallNodeTypes(): string[];
 
@@ -99,11 +100,13 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
     const knownCalls = this.detectKnownCalls(func.node);
     const lineAnnotations: LineAnnotation[] = [];
 
-    // Compute complexity from loops
+    // Compute complexity from loops — use per-loop estimatedComplexity
     let loopComplexity: BigOComplexity = "O(1)";
     if (loops.length > 0) {
-      const maxDepth = Math.max(...loops.map((l) => l.nestingDepth));
-      loopComplexity = complexityFromDepth(maxDepth);
+      loopComplexity = loops.reduce(
+        (max, l) => maxComplexity(max, l.estimatedComplexity),
+        "O(1)" as BigOComplexity,
+      );
     }
 
     // Factor in known method calls within loops
@@ -138,10 +141,14 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
 
     // Build line annotations
     for (const loop of loops) {
+      const isLog = loop.estimatedComplexity === "O(log n)" || loop.estimatedComplexity === "O(n log n)";
+      const note = isLog
+        ? `${loop.type} loop (logarithmic — halving/doubling)`
+        : `${loop.type} loop (nesting depth: ${loop.nestingDepth})`;
       lineAnnotations.push({
         line: loop.line,
         complexity: loop.estimatedComplexity,
-        note: `${loop.type} loop (nesting depth: ${loop.nestingDepth})`,
+        note,
       });
     }
     for (const call of knownCalls) {
@@ -174,8 +181,22 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
     const walk = (node: Parser.SyntaxNode, currentLoopDepth: number): void => {
       if (loopTypes.includes(node.type)) {
         const isConstant = this.isConstantLoop(node);
-        const depth = isConstant ? 0 : currentLoopDepth + 1;
-        const complexity = isConstant ? "O(1)" as BigOComplexity : complexityFromDepth(depth);
+        const isLogarithmic = !isConstant && this.isLogarithmicLoop(node);
+
+        let depth: number;
+        let complexity: BigOComplexity;
+
+        if (isConstant) {
+          depth = 0;
+          complexity = "O(1)";
+        } else if (isLogarithmic) {
+          // Logarithmic loop: standalone → O(log n), inside O(n) loop → O(n log n)
+          depth = 0;
+          complexity = multiplyComplexity(complexityFromDepth(currentLoopDepth), "O(log n)");
+        } else {
+          depth = currentLoopDepth + 1;
+          complexity = complexityFromDepth(depth);
+        }
 
         loops.push({
           type: node.type,
@@ -184,10 +205,11 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
           estimatedComplexity: complexity,
         });
 
-        // Recurse into children with incremented depth (only if not constant)
+        // Recurse into children — only increment depth for variable-bound loops
+        const childDepth = (isConstant || isLogarithmic) ? currentLoopDepth : currentLoopDepth + 1;
         for (let i = 0; i < node.childCount; i++) {
           const child = node.child(i);
-          if (child) walk(child, isConstant ? currentLoopDepth : currentLoopDepth + 1);
+          if (child) walk(child, childDepth);
         }
         return;
       }
@@ -252,8 +274,27 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
     // At least one call inside a loop → tree traversal pattern → O(n)
     if (callsOutsideLoops < totalCalls) return "O(n)";
     if (totalCalls === 1) return "O(n)"; // linear recursion
-    if (totalCalls >= 2) return "O(2^n)"; // branching recursion (like fibonacci)
+    if (totalCalls >= 2) {
+      // Check for divide-and-conquer: 2+ recursive calls + input halved
+      if (this.containsDivisionByTwo(funcNode)) return "O(n log n)";
+      return "O(2^n)"; // branching recursion (like fibonacci)
+    }
     return "unknown";
+  }
+
+  /**
+   * Check if a function body contains division by 2 (or right-shift by 1),
+   * which is a hallmark of divide-and-conquer algorithms (merge sort, etc.)
+   * and logarithmic loops.
+   *
+   * Language-agnostic: checks the full function text rather than specific
+   * AST node types, since division operators vary across grammars
+   * (binary_expression, multiplicative_expression, intdiv(), ~/ etc.)
+   */
+  protected containsDivisionByTwo(funcNode: Parser.SyntaxNode): boolean {
+    const text = funcNode.text;
+    // Match: / 2, /= 2, >> 1, >>= 1, // 2 (Python), ~/ 2 (Dart), intdiv(
+    return /\/\s*2\b/.test(text) || />>\s*1\b/.test(text) || /~\/\s*2\b/.test(text) || /intdiv\s*\(/.test(text);
   }
 
   protected detectKnownCalls(funcNode: Parser.SyntaxNode): KnownCallInfo[] {
@@ -325,13 +366,21 @@ export abstract class BaseAnalyzer implements LanguageAnalyzer {
     }
 
     if (loops.length > 0) {
-      const nonConstant = loops.filter((l) => l.nestingDepth > 0);
-      const constant = loops.filter((l) => l.nestingDepth === 0);
+      const nonConstant = loops.filter(
+        (l) => l.nestingDepth > 0 && l.estimatedComplexity !== "O(log n)" && l.estimatedComplexity !== "O(n log n)",
+      );
+      const constant = loops.filter((l) => l.estimatedComplexity === "O(1)");
+      const logarithmic = loops.filter(
+        (l) => l.estimatedComplexity === "O(log n)" || l.estimatedComplexity === "O(n log n)",
+      );
       if (nonConstant.length > 0) {
         const maxDepth = Math.max(...nonConstant.map((l) => l.nestingDepth));
         parts.push(
           `Found ${nonConstant.length} variable-bound loop(s), max nesting depth: ${maxDepth}.`,
         );
+      }
+      if (logarithmic.length > 0) {
+        parts.push(`Found ${logarithmic.length} logarithmic loop(s) (halving/doubling pattern).`);
       }
       if (constant.length > 0) {
         parts.push(`Found ${constant.length} constant-bound loop(s).`);

@@ -27,3 +27,24 @@ func traverseTree(node *Node) int {
 	}
 	return sum
 }
+
+// O(log n) - logarithmic loop (halving pattern)
+func logarithmicLoop(n int) int {
+	count := 0
+	for n > 1 {
+		n /= 2
+		count++
+	}
+	return count
+}
+
+// O(n log n) - divide-and-conquer recursion (merge sort)
+func mergeSort(arr []int) []int {
+	if len(arr) <= 1 {
+		return arr
+	}
+	mid := len(arr) / 2
+	left := mergeSort(arr[:mid])
+	right := mergeSort(arr[mid:])
+	return append(left, right...)
+}

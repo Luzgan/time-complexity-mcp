@@ -23,3 +23,22 @@ function traverseTree(node: TreeNode): number {
   }
   return sum;
 }
+
+// O(log n) - logarithmic loop (halving pattern)
+function logarithmicLoop(n: number): number {
+  let count = 0;
+  while (n > 1) {
+    n /= 2;
+    count++;
+  }
+  return count;
+}
+
+// O(n log n) - divide-and-conquer recursion (merge sort)
+function mergeSort(arr: number[]): number[] {
+  if (arr.length <= 1) return arr;
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSort(arr.slice(0, mid));
+  const right = mergeSort(arr.slice(mid));
+  return left.concat(right);
+}

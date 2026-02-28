@@ -195,6 +195,27 @@ export class PythonAnalyzer extends BaseAnalyzer {
     return false;
   }
 
+  protected isLogarithmicLoop(node: Parser.SyntaxNode): boolean {
+    // Python only has range-based for loops — no C-style for with update expression
+    // While: check body for augmented assignment with halving/doubling
+    if (node.type === "while_statement") {
+      let found = false;
+      this.walkNode(node, (child) => {
+        if (found) return;
+        if (child.type === "augmented_assignment") {
+          const text = child.text;
+          // Python uses //= for integer division assignment
+          if (/^[a-zA-Z_]\w*\s*(?:\/\/=\s*2|\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1)\b/.test(text)) {
+            found = true;
+          }
+        }
+      });
+      return found;
+    }
+
+    return false;
+  }
+
   protected getCallName(node: Parser.SyntaxNode): string | null {
     if (node.type !== "call") return null;
 

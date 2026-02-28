@@ -79,6 +79,21 @@ describe("PHP analyzer", () => {
       expect(fn!.complexity).toBe("O(n)");
       expect(fn!.isRecursive).toBe(true);
     });
+
+    it("should detect O(log n) for logarithmic loop (halving pattern)", async () => {
+      const result = await analyzeFile({ file_path: fixture("php-recursion.php") });
+      const fn = result.functions.find((f) => f.name === "logarithmicLoop");
+      expect(fn).toBeDefined();
+      expect(fn!.complexity).toBe("O(log n)");
+    });
+
+    it("should detect O(n log n) for merge sort (divide-and-conquer)", async () => {
+      const result = await analyzeFile({ file_path: fixture("php-recursion.php") });
+      const fn = result.functions.find((f) => f.name === "mergeSort");
+      expect(fn).toBeDefined();
+      expect(fn!.complexity).toBe("O(n log n)");
+      expect(fn!.isRecursive).toBe(true);
+    });
   });
 
   describe("php-built-in-methods.php", () => {

@@ -17,4 +17,23 @@ public class Recursion {
         }
         return sum;
     }
+
+    // O(log n) - logarithmic loop (halving pattern)
+    public int logarithmicLoop(int n) {
+        int count = 0;
+        while (n > 1) {
+            n /= 2;
+            count++;
+        }
+        return count;
+    }
+
+    // O(n log n) - divide-and-conquer recursion (merge sort)
+    public int[] mergeSort(int[] arr) {
+        if (arr.length <= 1) return arr;
+        int mid = arr.length / 2;
+        int[] left = mergeSort(java.util.Arrays.copyOfRange(arr, 0, mid));
+        int[] right = mergeSort(java.util.Arrays.copyOfRange(arr, mid, arr.length));
+        return left;
+    }
 }

@@ -73,6 +73,36 @@ export class JavaAnalyzer extends BaseAnalyzer {
     return false;
   }
 
+  protected isLogarithmicLoop(node: Parser.SyntaxNode): boolean {
+    // For-loop: check update expression for halving/doubling
+    if (node.type === "for_statement") {
+      const update = node.childForFieldName("update");
+      if (update) {
+        const text = update.text;
+        if (/^[a-zA-Z_$]\w*\s*(?:\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1)\b/.test(text)) {
+          return true;
+        }
+      }
+    }
+
+    // While/do-while: check body for assignment with halving/doubling
+    if (node.type === "while_statement" || node.type === "do_statement") {
+      let found = false;
+      this.walkNode(node, (child) => {
+        if (found) return;
+        if (child.type === "assignment_expression") {
+          const text = child.text;
+          if (/^[a-zA-Z_$]\w*\s*(?:\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1)\b/.test(text)) {
+            found = true;
+          }
+        }
+      });
+      return found;
+    }
+
+    return false;
+  }
+
   protected getCallName(node: Parser.SyntaxNode): string | null {
     if (node.type !== "method_invocation") return null;
 

@@ -135,6 +135,37 @@ export class JavaScriptAnalyzer extends BaseAnalyzer {
     return false;
   }
 
+  protected isLogarithmicLoop(node: Parser.SyntaxNode): boolean {
+    // For-loop: check update/increment expression for halving/doubling
+    if (node.type === "for_statement") {
+      const increment = node.childForFieldName("increment");
+      if (increment) {
+        const text = increment.text;
+        // Match: i /= 2, i >>= 1, i *= 2, i <<= 1 (simple identifier only)
+        if (/^[a-zA-Z_$]\w*\s*(?:\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1)\b/.test(text)) {
+          return true;
+        }
+      }
+    }
+
+    // While/do-while: check body for augmented assignment with halving/doubling
+    if (node.type === "while_statement" || node.type === "do_statement") {
+      let found = false;
+      this.walkNode(node, (child) => {
+        if (found) return;
+        if (child.type === "augmented_assignment_expression") {
+          const text = child.text;
+          if (/^[a-zA-Z_$]\w*\s*(?:\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1)\b/.test(text)) {
+            found = true;
+          }
+        }
+      });
+      return found;
+    }
+
+    return false;
+  }
+
   protected getCallName(node: Parser.SyntaxNode): string | null {
     const fn = node.childForFieldName("function");
     if (!fn) return null;

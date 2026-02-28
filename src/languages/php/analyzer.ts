@@ -87,6 +87,37 @@ export class PhpAnalyzer extends BaseAnalyzer {
     return false;
   }
 
+  protected isLogarithmicLoop(node: Parser.SyntaxNode): boolean {
+    // For-loop: check update expression for halving/doubling
+    if (node.type === "for_statement") {
+      const update = node.childForFieldName("update");
+      if (update) {
+        const text = update.text;
+        // PHP variables start with $
+        if (/^\$[a-zA-Z_]\w*\s*(?:\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1)\b/.test(text)) {
+          return true;
+        }
+      }
+    }
+
+    // While/do-while: check body for augmented assignment with halving/doubling
+    if (node.type === "while_statement" || node.type === "do_statement") {
+      let found = false;
+      this.walkNode(node, (child) => {
+        if (found) return;
+        if (child.type === "augmented_assignment_expression") {
+          const text = child.text;
+          if (/^\$[a-zA-Z_]\w*\s*(?:\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1)\b/.test(text)) {
+            found = true;
+          }
+        }
+      });
+      return found;
+    }
+
+    return false;
+  }
+
   protected getCallName(node: Parser.SyntaxNode): string | null {
     // function_call_expression: sort($arr) → child "name" = "sort"
     if (node.type === "function_call_expression") {

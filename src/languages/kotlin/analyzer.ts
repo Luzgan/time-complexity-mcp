@@ -89,6 +89,26 @@ export class KotlinAnalyzer extends BaseAnalyzer {
     return hasLiteral && !hasVariable;
   }
 
+  protected isLogarithmicLoop(node: Parser.SyntaxNode): boolean {
+    // Kotlin only has range-based for loops — no C-style for with update expression
+    // While/do-while: check body for assignment with halving/doubling
+    if (node.type === "while_statement" || node.type === "do_while_statement") {
+      let found = false;
+      this.walkNode(node, (child) => {
+        if (found) return;
+        if (child.type === "assignment") {
+          const text = child.text;
+          if (/^[a-zA-Z_]\w*\s*(?:\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1)\b/.test(text)) {
+            found = true;
+          }
+        }
+      });
+      return found;
+    }
+
+    return false;
+  }
+
   protected getCallName(node: Parser.SyntaxNode): string | null {
     if (node.type !== "call_expression") return null;
 

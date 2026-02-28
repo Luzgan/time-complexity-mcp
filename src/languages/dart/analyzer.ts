@@ -340,6 +340,50 @@ export class DartAnalyzer extends BaseAnalyzer {
     return false;
   }
 
+  protected isLogarithmicLoop(node: Parser.SyntaxNode): boolean {
+    if (node.type === "for_statement") {
+      // Find the for_loop_parts child and check updaters for halving/doubling
+      let loopParts: Parser.SyntaxNode | null = null;
+      for (let i = 0; i < node.childCount; i++) {
+        const child = node.child(i);
+        if (child?.type === "for_loop_parts") {
+          loopParts = child;
+          break;
+        }
+      }
+      if (loopParts) {
+        // Check updater children for halving/doubling assignments
+        for (let i = 0; i < loopParts.childCount; i++) {
+          const child = loopParts.child(i);
+          if (child?.type === "assignment_expression") {
+            const text = child.text;
+            // Dart uses ~/= for integer division assignment
+            if (/^[a-zA-Z_$]\w*\s*(?:\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1|~\/=\s*2)\b/.test(text)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+
+    // While/do-while: check body for assignment with halving/doubling
+    if (node.type === "while_statement" || node.type === "do_statement") {
+      let found = false;
+      this.walkNode(node, (child) => {
+        if (found) return;
+        if (child.type === "assignment_expression") {
+          const text = child.text;
+          if (/^[a-zA-Z_$]\w*\s*(?:\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1|~\/=\s*2)\b/.test(text)) {
+            found = true;
+          }
+        }
+      });
+      return found;
+    }
+
+    return false;
+  }
+
   protected getCallName(_node: Parser.SyntaxNode): string | null {
     // Not used directly — we override detectRecursion / detectKnownCalls.
     return null;
@@ -495,7 +539,11 @@ export class DartAnalyzer extends BaseAnalyzer {
     // At least one call inside a loop → tree traversal pattern → O(n)
     if (callsOutsideLoops < recursiveCalls.length) return "O(n)";
     if (recursiveCalls.length === 1) return "O(n)"; // linear recursion
-    if (recursiveCalls.length >= 2) return "O(2^n)"; // branching recursion
+    if (recursiveCalls.length >= 2) {
+      // Check for divide-and-conquer: 2+ recursive calls + input halved
+      if (this.containsDivisionByTwo(funcNode)) return "O(n log n)";
+      return "O(2^n)"; // branching recursion (like fibonacci)
+    }
     return "unknown";
   }
 

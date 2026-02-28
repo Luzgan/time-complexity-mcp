@@ -86,6 +86,38 @@ export class GoAnalyzer extends BaseAnalyzer {
     return false;
   }
 
+  protected isLogarithmicLoop(node: Parser.SyntaxNode): boolean {
+    if (node.type !== "for_statement") return false;
+
+    // Traditional for with for_clause: check update for halving/doubling
+    for (let i = 0; i < node.childCount; i++) {
+      const child = node.child(i);
+      if (child?.type === "for_clause") {
+        const update = child.childForFieldName("update");
+        if (update) {
+          const text = update.text;
+          if (/^[a-zA-Z_]\w*\s*(?:\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1)\b/.test(text)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    }
+
+    // Simple for (while-like): check body for assignment with halving/doubling
+    let found = false;
+    this.walkNode(node, (child) => {
+      if (found) return;
+      if (child.type === "assignment_statement") {
+        const text = child.text;
+        if (/^[a-zA-Z_]\w*\s*(?:\/=\s*2|>>=\s*1|\*=\s*2|<<=\s*1)\b/.test(text)) {
+          found = true;
+        }
+      }
+    });
+    return found;
+  }
+
   protected getCallName(node: Parser.SyntaxNode): string | null {
     if (node.type !== "call_expression") return null;
 

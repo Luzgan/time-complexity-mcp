@@ -17,3 +17,22 @@ int traverseTree(List<dynamic> node) {
   }
   return sum;
 }
+
+// O(log n) - logarithmic loop (halving pattern)
+int logarithmicLoop(int n) {
+  int count = 0;
+  while (n > 1) {
+    n ~/= 2;
+    count++;
+  }
+  return count;
+}
+
+// O(n log n) - divide-and-conquer recursion (merge sort)
+List<int> mergeSort(List<int> arr) {
+  if (arr.length <= 1) return arr;
+  int mid = arr.length ~/ 2;
+  List<int> left = mergeSort(arr.sublist(0, mid));
+  List<int> right = mergeSort(arr.sublist(mid));
+  return [...left, ...right];
+}
