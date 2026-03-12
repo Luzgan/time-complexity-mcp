@@ -4,6 +4,10 @@ An MCP server that estimates Big-O time complexity of your code through static a
 
 Built for AI coding assistants &mdash; works with [Claude Code](https://claude.ai/code) and [GitHub Copilot](https://github.com/features/copilot).
 
+<a href="https://glama.ai/mcp/servers/Luzgan/time-complexity-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/Luzgan/time-complexity-mcp/badge" alt="time-complexity-mcp MCP server" />
+</a>
+
 ## Supported Languages
 
 | Language | Extensions | Grammar |
